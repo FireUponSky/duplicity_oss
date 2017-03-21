@@ -145,10 +145,11 @@ class AliyunBackend(duplicity.backend.Backend):
     def list_filenames_in_bucket(self):
         filename_list = []
         marker = ""
-        while True:
+        not_exausted=True
+        while not_exausted:
             try:
-                resp = self.bucket.list_objects(self.key_prefix, '/')
-                object_list, marker = resp.object_list, resp.next_marker
+                resp = self.bucket.list_objects(self.key_prefix, '/', marker)
+                object_list, marker, not_exausted = resp.object_list, resp.next_marker, resp.is_truncated
                 for k in object_list:
                     try:
                         filename = k.key.replace(self.key_prefix, '', 1)
@@ -158,8 +159,8 @@ class AliyunBackend(duplicity.backend.Backend):
                     except AttributeError:
                         log.Error("List AttributeError")
                         pass
-                if len(marker) == 0:
-                    break
+                # if len(marker) == 0:
+                #     break
             except Exception, e:
                 log.Error("List bucket %s failed with %s" % (self.bucket_name, e))
                 pass
